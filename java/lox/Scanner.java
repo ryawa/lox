@@ -1,4 +1,5 @@
 // TODO: Challenge: add support for block comments /* ... */
+package lox;
 
 import java.util.ArrayList;
 import java.util.HashMap;
