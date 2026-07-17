@@ -1,6 +1,6 @@
 package lox;
 
-class AstPrinter implements Expr.Operation<String> {
+class AstPrinter implements Expr.AstOperator<String> {
     String print(Expr expr) {
         return expr.apply(this);
     }

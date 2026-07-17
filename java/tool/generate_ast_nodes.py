@@ -17,11 +17,11 @@ def define_grammar(output_dir, base_name, types):
             f"abstract class {base_name} {{\n"
         )
 
-        define_operation(f, base_name, types)
+        define_ast_operator(f, base_name, types)
         f.write("\n")
 
         # The base apply() method
-        f.write("    abstract <R> R apply(Operation<R> operation);\n")
+        f.write("    abstract <R> R apply(AstOperator<R> astOperator);\n")
 
         # AST classes
         for class_name, field_list in types.items():
@@ -31,8 +31,8 @@ def define_grammar(output_dir, base_name, types):
         f.write("}\n")
 
 
-def define_operation(f, base_name, types):
-    f.write("    interface Operation<R> {\n")
+def define_ast_operator(f, base_name, types):
+    f.write("    interface AstOperator<R> {\n")
     for type_name, _ in types.items():
         f.write(
             f"        R on{type_name}{base_name}("
@@ -61,8 +61,8 @@ def define_type(f, base_name, class_name, field_list):
     # Visitor pattern
     f.write(
         f"        @Override\n"
-        f"        <R> R apply(Operation<R> operation) {{\n"
-        f"            return operation.on{class_name}{base_name}(this);\n"
+        f"        <R> R apply(AstOperator<R> astOperator) {{\n"
+        f"            return astOperator.on{class_name}{base_name}(this);\n"
         f"        }}\n"
         f"\n"
     )

@@ -3,7 +3,7 @@ package lox;
 import java.util.List;
 
 abstract class Expr {
-    interface Operation<R> {
+    interface AstOperator<R> {
         R onBinaryExpr(Binary expr);
         R onTernaryExpr(Ternary expr);
         R onGroupingExpr(Grouping expr);
@@ -11,7 +11,7 @@ abstract class Expr {
         R onUnaryExpr(Unary expr);
     }
 
-    abstract <R> R apply(Operation<R> operation);
+    abstract <R> R apply(AstOperator<R> astOperator);
 
     static class Binary extends Expr {
         public Binary(Expr left, Token operator, Expr right) {
@@ -21,8 +21,8 @@ abstract class Expr {
         }
 
         @Override
-        <R> R apply(Operation<R> operation) {
-            return operation.onBinaryExpr(this);
+        <R> R apply(AstOperator<R> astOperator) {
+            return astOperator.onBinaryExpr(this);
         }
 
         final Expr left;
@@ -40,8 +40,8 @@ abstract class Expr {
         }
 
         @Override
-        <R> R apply(Operation<R> operation) {
-            return operation.onTernaryExpr(this);
+        <R> R apply(AstOperator<R> astOperator) {
+            return astOperator.onTernaryExpr(this);
         }
 
         final Expr left;
@@ -57,8 +57,8 @@ abstract class Expr {
         }
 
         @Override
-        <R> R apply(Operation<R> operation) {
-            return operation.onGroupingExpr(this);
+        <R> R apply(AstOperator<R> astOperator) {
+            return astOperator.onGroupingExpr(this);
         }
 
         final Expr expression;
@@ -70,8 +70,8 @@ abstract class Expr {
         }
 
         @Override
-        <R> R apply(Operation<R> operation) {
-            return operation.onLiteralExpr(this);
+        <R> R apply(AstOperator<R> astOperator) {
+            return astOperator.onLiteralExpr(this);
         }
 
         final Object value;
@@ -84,8 +84,8 @@ abstract class Expr {
         }
 
         @Override
-        <R> R apply(Operation<R> operation) {
-            return operation.onUnaryExpr(this);
+        <R> R apply(AstOperator<R> astOperator) {
+            return astOperator.onUnaryExpr(this);
         }
 
         final Token operator;
