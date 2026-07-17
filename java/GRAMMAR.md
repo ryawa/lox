@@ -7,7 +7,8 @@ Unary -> ( "-" | "!" ) Expr
 Binary -> Expr operator Expr
 
 With precedence:
-expression     → equality ;
+expression     → list ;
+list           → equality ( "," equality )* ;
 equality       → comparison ( ( "!=" | "==" ) comparison )* ;
 comparison     → sum ( ( ">" | ">=" | "<" | "<=" ) sum )* ;
 sum            → product ( ( "-" | "+" ) product )* ;
