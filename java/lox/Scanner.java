@@ -1,4 +1,3 @@
-// TODO: Challenge: add support for block comments /* ... */
 package lox;
 
 import java.util.ArrayList;
@@ -12,6 +11,8 @@ class Scanner {
     private int start = 0;
     private int current = 0;
     private int line = 1;
+    private String unexpectedChars = "";
+    private boolean expectedChar = true;
 
     private static final Map<String, TokenType> keywords;
     static {
@@ -43,6 +44,9 @@ class Scanner {
             start = current;
             scanToken();
         }
+        if (!unexpectedChars.isEmpty()) {
+            Lox.error(line, "Unexpected characters " + unexpectedChars);
+        }
 
         tokens.add(new Token(TokenType.EOF, "", null, line));
         return tokens;
@@ -50,10 +54,6 @@ class Scanner {
 
     private boolean isAtEnd() {
         return current >= source.length();
-    }
-
-    private char advance() {
-        return source.charAt(current++);
     }
 
     private void addToken(TokenType type) {
@@ -66,6 +66,7 @@ class Scanner {
     }
 
     private void scanToken() {
+        expectedChar = true;
         char c = advance();
         switch (c) {
             case '(':
@@ -116,6 +117,9 @@ class Scanner {
                     while (peek() != '\n' && !isAtEnd()) {
                         advance();
                     }
+                    // Don't add a token
+                } else if (match('*')) {
+                    multilineComment();
                 } else {
                     addToken(TokenType.SLASH);
                 }
@@ -137,24 +141,37 @@ class Scanner {
                 } else if (isAlpha(c)) {
                     identifier();
                 } else {
-                    // TODO: handle multiple unexpected characters in a row more cleanly
-                    Lox.error(line, "Unexpected character " + c);
+                    expectedChar = false;
+                    unexpectedChars += c;
                 }
                 break;
         }
+        if (expectedChar && !unexpectedChars.isEmpty()) {
+            Lox.error(line, "Unexpected characters " + unexpectedChars);
+            unexpectedChars = "";
+        }
     }
 
-    private void identifier() {
-        while (isAlphaNumeric(peek())) {
+    private void multilineComment() {
+        while (!(peek() == '*' && peekNext() == '/') && !isAtEnd()) {
+            if (match('/') && match('*')) {
+                multilineComment();
+            }
+            if (peek() == '\n') {
+                line++;
+            }
             advance();
         }
 
-        String text = source.substring(start, current);
-        TokenType type = keywords.get(text);
-        if (type == null) {
-            type = TokenType.IDENTIFIER;
+        if (isAtEnd()) {
+            Lox.error(line, "Unterminated multiline comment");
+            return;
         }
-        addToken(type);
+
+        // Closing "*/"
+        advance(); advance();
+
+        // No token
     }
 
     private void number() {
@@ -195,16 +212,21 @@ class Scanner {
         addToken(TokenType.STRING, value);
     }
 
-    private boolean match(char expected) {
-        if (isAtEnd()) {
-            return false;
-        }
-        if (source.charAt(current) != expected) {
-            return false;
+    private void identifier() {
+        while (isAlphaNumeric(peek())) {
+            advance();
         }
 
-        current++;
-        return true;
+        String text = source.substring(start, current);
+        TokenType type = keywords.get(text);
+        if (type == null) {
+            type = TokenType.IDENTIFIER;
+        }
+        addToken(type);
+    }
+
+    private char advance() {
+        return source.charAt(current++);
     }
 
     private char peek() {
@@ -219,6 +241,18 @@ class Scanner {
             return '\0';
         }
         return source.charAt(current + 1);
+    }
+
+    private boolean match(char expected) {
+        if (isAtEnd()) {
+            return false;
+        }
+        if (source.charAt(current) != expected) {
+            return false;
+        }
+
+        current++;
+        return true;
     }
 
     private boolean isAlpha(char c) {
