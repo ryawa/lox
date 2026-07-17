@@ -1,0 +1,11 @@
+- Better error reporting
+- Static typing
+    - Remove `nil`
+- `print` as a function
+- Standard library
+- `do while`
+- `for .. in`
+- Pure OOP (basic types are objects)
+- Everything is an expression?
+    - Implicit returns
+- Remove semicolons
