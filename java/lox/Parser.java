@@ -3,7 +3,15 @@ package lox;
 import java.util.List;
 
 class Parser {
-    private static class ParseError extends RuntimeException {};
+    private static class ParseError extends RuntimeException {
+        final Token token;
+        final String message;
+
+        ParseError(Token token, String message) {
+            this.token = token;
+            this.message = message;
+        }
+    }
 
     private final List<Token> tokens;
     private int current = 0;
@@ -14,10 +22,37 @@ class Parser {
 
     Expr parse() {
         try {
-            return expression();
+            Expr expr = expression();
+            consume(TokenType.EOF, "Expect end of expression.");
+            return expr;
         } catch (ParseError error) {
+            Lox.error(error.token, error.message);
             return null;
         }
+    }
+
+    @FunctionalInterface
+    private interface ParseRule {
+        Expr parse();
+    }
+
+    private Expr leftAssociative(ParseRule operand, TokenType... operators) {
+        if (match(operators)) {
+            Token op = previous();
+            try {
+                Expr ignored = operand.parse();
+            } catch (ParseError ignored) {
+                // Ignore any deeper errors
+            }
+            throw new ParseError(op, "Missing left operand before '" + op.lexeme + "'.");
+        }
+        Expr expr = operand.parse();
+        while (match(operators)) {
+            Token op = previous();
+            Expr right = operand.parse();
+            expr = new Expr.Binary(expr, op, right);
+        }
+        return expr;
     }
 
     private Expr expression() {
@@ -26,13 +61,7 @@ class Parser {
 
     // C's comma operator
     private Expr list() {
-        Expr expr = conditional();
-        while (match(TokenType.COMMA)) {
-            Token operator = previous();
-            Expr right = conditional();
-            expr = new Expr.Binary(expr, operator, right);
-        }
-        return expr;
+        return leftAssociative(this::conditional, TokenType.COMMA);
     }
 
     // Ternary operator
@@ -49,43 +78,19 @@ class Parser {
     }
 
     private Expr equality() {
-        Expr expr = comparison();
-        while (match(TokenType.BANG_EQUAL, TokenType.EQUAL_EQUAL)) {
-            Token operator = previous();
-            Expr right = comparison();
-            expr = new Expr.Binary(expr, operator, right);
-        }
-        return expr;
+        return leftAssociative(this::comparison, TokenType.EQUAL_EQUAL, TokenType.BANG_EQUAL);
     }
 
     private Expr comparison() {
-        Expr expr = sum();
-        while (match(TokenType.GREATER_EQUAL, TokenType.GREATER, TokenType.LESS_EQUAL, TokenType.LESS)) {
-            Token operator = previous();
-            Expr right = sum();
-            expr = new Expr.Binary(expr, operator, right);
-        }
-        return expr;
+        return leftAssociative(this::sum, TokenType.GREATER_EQUAL, TokenType.GREATER, TokenType.LESS_EQUAL, TokenType.LESS);
     }
 
     private Expr sum() {
-        Expr expr = product();
-        while (match(TokenType.PLUS, TokenType.MINUS)) {
-            Token operator = previous();
-            Expr right = product();
-            expr = new Expr.Binary(expr, operator, right);
-        }
-        return expr;
+        return leftAssociative(this::product, TokenType.PLUS, TokenType.MINUS);
     }
 
     private Expr product() {
-        Expr expr = unary();
-        while (match(TokenType.STAR, TokenType.SLASH)) {
-            Token operator = previous();
-            Expr right = unary();
-            expr = new Expr.Binary(expr, operator, right);
-        }
-        return expr;
+        return leftAssociative(this::unary, TokenType.STAR, TokenType.SLASH);
     }
 
     private Expr unary() {
@@ -112,7 +117,7 @@ class Parser {
             return new Expr.Grouping(expr);
         }
 
-        throw error(peek(), "Expect expression.");
+        throw new ParseError(peek(), "Expect expression.");
     }
 
     private boolean match(TokenType... types) {
@@ -127,7 +132,7 @@ class Parser {
 
     private Token consume(TokenType type, String message) {
         if (check(type)) return advance();
-        throw error(peek(), message);
+        throw new ParseError(peek(), message);
     }
 
     private boolean check(TokenType type) {
@@ -150,11 +155,6 @@ class Parser {
 
     private Token previous() {
         return tokens.get(current - 1);
-    }
-
-    private ParseError error(Token token, String message) {
-        Lox.error(token, message);
-        return new ParseError();
     }
 
     private void synchronize() {
