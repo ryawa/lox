@@ -5,7 +5,7 @@ import sys
 from pathlib import Path
 
 
-def define_ast(output_dir, base_name, types):
+def define_grammar(output_dir, base_name, types):
     output_dir.mkdir(exist_ok=True)
     path = output_dir / f"{base_name}.java"
     with open(path, "w") as f:
@@ -17,25 +17,25 @@ def define_ast(output_dir, base_name, types):
             f"abstract class {base_name} {{\n"
         )
 
-        define_visitor(f, base_name, types)
+        define_operation(f, base_name, types)
         f.write("\n")
+
+        # The base apply() method
+        f.write("    abstract <R> R apply(Operation<R> operation);\n")
 
         # AST classes
         for class_name, field_list in types.items():
+            f.write("\n")
             define_type(f, base_name, class_name, field_list)
-        f.write("\n")
-
-        # The base accept() method
-        f.write("    abstract <R> R accept(Visitor<R> visitor);\n")
 
         f.write("}\n")
 
 
-def define_visitor(f, base_name, types):
-    f.write("    interface Visitor<R> {\n")
+def define_operation(f, base_name, types):
+    f.write("    interface Operation<R> {\n")
     for type_name, _ in types.items():
         f.write(
-            f"        R visit{type_name}{base_name}("
+            f"        R on{type_name}{base_name}("
             f"{type_name} {base_name.lower()}"
             f");\n"
         )
@@ -61,10 +61,10 @@ def define_type(f, base_name, class_name, field_list):
     # Visitor pattern
     f.write(
         f"        @Override\n"
-        f"        <R> R accept(Visitor<R> visitor) {{\n"
-        f"            return visitor.visit{class_name}{base_name}(this);\n"
+        f"        <R> R apply(Operation<R> operation) {{\n"
+        f"            return operation.on{class_name}{base_name}(this);\n"
         f"        }}\n"
-        f" \n"
+        f"\n"
     )
 
     # Fields
@@ -76,9 +76,9 @@ def define_type(f, base_name, class_name, field_list):
 
 if __name__ == "__main__":
     if len(sys.argv) != 2:
-        print("Usage: ./generate_ast.py <output directory>")
+        print(f"Usage: {sys.argv[0]} <output directory>")
         sys.exit(64)
-    define_ast(
+    define_grammar(
         Path(sys.argv[1]),
         "Expr",
         {
