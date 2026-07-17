@@ -1,4 +1,4 @@
-# EXPRESSIONS
+# Expressions
 AST nodes:
 Expr -> Literal | Unary | Binary | Grouping | Ternary
 Literal -> NUMBER | STRING | "true" | "false" | "nil"
@@ -7,7 +7,7 @@ Unary -> ( "-" | "!" ) Expr
 Binary -> Expr operator Expr
 Ternary -> Expr operator Expr operator Expr
 
-With precedence:
+Recursive descent implementation:
 expression     → list ;
 list           → conditional ( "," conditional )* ;
 conditional    → equality ( "?" expression ":" conditional )? ;
@@ -19,3 +19,5 @@ unary          → ( "!" | "-" ) unary
                | primary ;
 primary        → NUMBER | STRING | "true" | "false" | "nil"
                | "(" expression ")" ;
+
+Error productions for binary operations missing left operand
