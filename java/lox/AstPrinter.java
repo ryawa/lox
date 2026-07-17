@@ -11,6 +11,11 @@ class AstPrinter implements Expr.Operation<String> {
     }
 
     @Override
+    public String onTernaryExpr(Expr.Ternary expr) {
+        return parenthesize(expr.leftOperator.lexeme + " " + expr.rightOperator.lexeme, expr.left, expr.middle, expr.right);
+    }
+
+    @Override
     public String onGroupingExpr(Expr.Grouping expr) {
         return parenthesize("group", expr.expression);
     }

@@ -26,11 +26,24 @@ class Parser {
 
     // C's comma operator
     private Expr list() {
-        Expr expr = equality();
+        Expr expr = conditional();
         while (match(TokenType.COMMA)) {
             Token operator = previous();
-            Expr right = equality();
+            Expr right = conditional();
             expr = new Expr.Binary(expr, operator, right);
+        }
+        return expr;
+    }
+
+    // Ternary operator
+    private Expr conditional() {
+        Expr expr = equality();
+        if (match(TokenType.QUESTION)) {
+            Token leftOperator = previous();
+            Expr middle = expression();
+            Token rightOperator = consume(TokenType.COLON, "Expect ':' after '?'.");
+            Expr right = conditional();
+            return new Expr.Ternary(expr, leftOperator, middle, rightOperator, right);
         }
         return expr;
     }
