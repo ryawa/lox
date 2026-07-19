@@ -45,7 +45,7 @@ class Scanner {
             scanToken();
         }
         if (!unexpectedChars.isEmpty()) {
-            Lox.error(line, "Unexpected characters " + unexpectedChars);
+            Lox.error(line, "Unexpected characters '" + unexpectedChars + "'.");
         }
 
         tokens.add(new Token(TokenType.EOF, "", null, line));
@@ -153,7 +153,7 @@ class Scanner {
                 break;
         }
         if (expectedChar && !unexpectedChars.isEmpty()) {
-            Lox.error(line, "Unexpected characters " + unexpectedChars);
+            Lox.error(line, "Unexpected characters '" + unexpectedChars + "'.");
             unexpectedChars = "";
         }
     }
@@ -170,7 +170,7 @@ class Scanner {
         }
 
         if (isAtEnd()) {
-            Lox.error(line, "Unterminated multiline comment");
+            Lox.error(line, "Unterminated multiline comment.");
             return;
         }
 
@@ -206,7 +206,7 @@ class Scanner {
         }
 
         if (isAtEnd()) {
-            Lox.error(line, "Unterminated string");
+            Lox.error(line, "Unterminated string.");
             return;
         }
 

@@ -1,4 +1,5 @@
-- Better error reporting
+- Better error reporting to user
+- Clean up error handling methods
 - Static typing
     - Remove `nil`
 - `print` as a function

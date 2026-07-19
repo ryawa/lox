@@ -5,11 +5,10 @@ import java.util.List;
 class Parser {
     private static class ParseError extends RuntimeException {
         final Token token;
-        final String message;
 
         ParseError(Token token, String message) {
+            super(message);
             this.token = token;
-            this.message = message;
         }
     }
 
@@ -26,7 +25,7 @@ class Parser {
             consume(TokenType.EOF, "Expect end of expression.");
             return expr;
         } catch (ParseError error) {
-            Lox.error(error.token, error.message);
+            Lox.error(error.token, error.getMessage());
             return null;
         }
     }
@@ -136,7 +135,7 @@ class Parser {
     }
 
     private boolean check(TokenType type) {
-        if (isAtEnd()) return false;
+        // if (isAtEnd()) return false;
         return peek().type == type;
     }
 
